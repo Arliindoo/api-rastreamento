@@ -1,0 +1,1402 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "09A · Rastreamento de encomendas",
+    "version": "1.0.0",
+    "description": "Contrato das cinco operações do formulário da dupla."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3000"
+    }
+  ],
+  "security": [
+    {
+      "contaLocal": []
+    }
+  ],
+  "paths": {
+    "/encomendas/{id}/eventos": {
+      "post": {
+        "operationId": "registrarEvento",
+        "summary": "Registrar evento ou reconhecer reenvio",
+        "description": "HU1 e HU2 · RN1–RN7. Expedição registra coleta, operador usa seu centro, motorista atua na encomenda atribuída. Reenvios são comparados com o evento normalizado e o responsável.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "example": "ENC-001"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Evento persistido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recibo"
+                },
+                "examples": {
+                  "resposta": {
+                    "value": {
+                      "id": "evt-1",
+                      "tipo": "COLETA",
+                      "ocorridoEm": "2026-11-20T12:00:00.000Z",
+                      "recebidoEm": "2026-11-20T12:01:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Evento ou prova já recebido. Retorna o recibo original.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recibo"
+                },
+                "examples": {
+                  "resposta": {
+                    "value": {
+                      "id": "evt-1",
+                      "tipo": "COLETA",
+                      "ocorridoEm": "2026-11-20T12:00:00.000Z",
+                      "recebidoEm": "2026-11-20T12:01:00.000Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos inválidos ou centro inexistente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 400,
+                      "error": "Bad Request",
+                      "message": "Dados inválidos."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ausentes ou inválidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 401,
+                      "error": "Unauthorized",
+                      "message": "Credenciais inválidas."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil ou vínculo sem permissão.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 403,
+                      "error": "Forbidden",
+                      "message": "Perfil sem permissão para esta operação."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 404,
+                      "error": "Not Found",
+                      "message": "Recurso indisponível."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ID de evento ou comprovante com dados divergentes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 409,
+                      "error": "Conflict",
+                      "message": "Conflito com o registro existente."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventoEntrada"
+              },
+              "examples": {
+                "coleta": {
+                  "value": {
+                    "id": "evt-1",
+                    "tipo": "COLETA",
+                    "ocorridoEm": "2026-11-20T09:00:00-03:00",
+                    "origem": "Expedição central"
+                  }
+                },
+                "entrada": {
+                  "value": {
+                    "id": "evt-2",
+                    "tipo": "ENTRADA",
+                    "ocorridoEm": "2026-11-20T09:00:00-03:00",
+                    "centroId": "CD-01"
+                  }
+                },
+                "saida": {
+                  "value": {
+                    "id": "evt-3",
+                    "tipo": "SAIDA",
+                    "ocorridoEm": "2026-11-20T09:00:00-03:00",
+                    "centroId": "CD-01"
+                  }
+                },
+                "tentativa": {
+                  "value": {
+                    "id": "evt-4",
+                    "tipo": "TENTATIVA",
+                    "ocorridoEm": "2026-11-20T09:00:00-03:00",
+                    "resultado": "Não concluída",
+                    "motivo": "Destinatário ausente"
+                  }
+                },
+                "entrega": {
+                  "value": {
+                    "id": "evt-5",
+                    "tipo": "ENTREGA",
+                    "ocorridoEm": "2026-11-20T09:00:00-03:00",
+                    "comprovante": {
+                      "id": "cp-1",
+                      "conteudo": "Recebido na portaria."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      },
+      "get": {
+        "operationId": "investigar",
+        "summary": "Investigar eventos e contestações",
+        "description": "HU5 · RN7 e RN10. Suporte consulta os horários, responsáveis e provas vinculadas. Ordem por fato e sequência de gravação.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "example": "ENC-001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Histórico interno.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Investigacao"
+                },
+                "examples": {
+                  "resposta": {
+                    "value": {
+                      "encomendaId": "ENC-001",
+                      "eventos": [
+                        {
+                          "id": "evt-1",
+                          "tipo": "COLETA",
+                          "ocorridoEm": "2026-11-20T12:00:00.000Z",
+                          "recebidoEm": "2026-11-20T12:01:00.000Z",
+                          "responsavel": "expedicao",
+                          "origem": "Expedição central",
+                          "centroId": null,
+                          "resultado": null,
+                          "motivo": null,
+                          "comprovanteId": null,
+                          "comprovanteConteudo": null
+                        }
+                      ],
+                      "contestacoes": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ausentes ou inválidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 401,
+                      "error": "Unauthorized",
+                      "message": "Credenciais inválidas."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil ou vínculo sem permissão.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 403,
+                      "error": "Forbidden",
+                      "message": "Perfil sem permissão para esta operação."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 404,
+                      "error": "Not Found",
+                      "message": "Recurso indisponível."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Eventos"
+        ]
+      }
+    },
+    "/encomendas/{id}/rastreamento": {
+      "get": {
+        "operationId": "rastrear",
+        "summary": "Consultar rastreamento próprio",
+        "description": "HU3 · RN5 e RN8. Cliente vinculado. Histórico crescente pelo horário do fato. As decisões do suporte aparecem nas contestações.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "example": "ENC-001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Eventos resumidos e contestações da encomenda.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rastreamento"
+                },
+                "examples": {
+                  "resposta": {
+                    "value": {
+                      "encomendaId": "ENC-001",
+                      "status": "Coletada",
+                      "eventos": [
+                        {
+                          "tipo": "COLETA",
+                          "ocorridoEm": "2026-11-20T12:00:00.000Z"
+                        }
+                      ],
+                      "contestacoes": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ausentes ou inválidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 401,
+                      "error": "Unauthorized",
+                      "message": "Credenciais inválidas."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil ou vínculo sem permissão.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 403,
+                      "error": "Forbidden",
+                      "message": "Perfil sem permissão para esta operação."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 404,
+                      "error": "Not Found",
+                      "message": "Recurso indisponível."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Rastreamento"
+        ]
+      }
+    },
+    "/encomendas/{id}/contestacoes": {
+      "post": {
+        "operationId": "abrirContestacao",
+        "summary": "Abrir contestação",
+        "description": "HU4 · RN9. Cliente vinculado registra a ocorrência após existir entrega.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "example": "ENC-001"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Contestação aberta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contestacao"
+                },
+                "examples": {
+                  "resposta": {
+                    "value": {
+                      "id": 1,
+                      "encomendaId": "ENC-001",
+                      "estado": "Aberta",
+                      "abertaEm": "2026-11-20T17:00:00Z",
+                      "motivo": "Pacote entregue a outra pessoa.",
+                      "decisao": null,
+                      "justificativa": null,
+                      "responsavel": null,
+                      "decididaEm": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Motivo inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 400,
+                      "error": "Bad Request",
+                      "message": "Dados inválidos."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ausentes ou inválidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 401,
+                      "error": "Unauthorized",
+                      "message": "Credenciais inválidas."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil ou vínculo sem permissão.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 403,
+                      "error": "Forbidden",
+                      "message": "Perfil sem permissão para esta operação."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 404,
+                      "error": "Not Found",
+                      "message": "Recurso indisponível."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Entrega ainda não registrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 409,
+                      "error": "Conflict",
+                      "message": "Conflito com o registro existente."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Abrir"
+              },
+              "examples": {
+                "pedido": {
+                  "value": {
+                    "motivo": "Pacote entregue a outra pessoa."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Contestações"
+        ]
+      }
+    },
+    "/contestacoes/{id}": {
+      "patch": {
+        "operationId": "decidirContestacao",
+        "summary": "Decidir contestação aberta",
+        "description": "HU5 · RN10. Suporte registra uma única decisão e a justificativa.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Decisão persistida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contestacao"
+                },
+                "examples": {
+                  "resposta": {
+                    "value": {
+                      "id": 1,
+                      "encomendaId": "ENC-001",
+                      "estado": "Decidida",
+                      "abertaEm": "2026-11-20T17:00:00Z",
+                      "motivo": "Pacote entregue a outra pessoa.",
+                      "decisao": "Contestação acolhida",
+                      "justificativa": "Suporte confirmou entrega a terceiro.",
+                      "responsavel": "suporte",
+                      "decididaEm": "2026-11-20T18:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Decisão ou justificativa inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 400,
+                      "error": "Bad Request",
+                      "message": "Dados inválidos."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais ausentes ou inválidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 401,
+                      "error": "Unauthorized",
+                      "message": "Credenciais inválidas."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Perfil ou vínculo sem permissão.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 403,
+                      "error": "Forbidden",
+                      "message": "Perfil sem permissão para esta operação."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso indisponível.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 404,
+                      "error": "Not Found",
+                      "message": "Recurso indisponível."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Contestação já decidida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "examples": {
+                  "falha": {
+                    "value": {
+                      "statusCode": 409,
+                      "error": "Conflict",
+                      "message": "Conflito com o registro existente."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Decidir"
+              },
+              "examples": {
+                "decisao": {
+                  "value": {
+                    "decisao": "Contestação acolhida",
+                    "justificativa": "Suporte confirmou entrega a terceiro."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Contestações"
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "contaLocal": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Contas locais de demonstração descritas no README."
+      }
+    },
+    "schemas": {
+      "Comprovante": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "conteudo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "conteudo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        }
+      },
+      "Coleta": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tipo",
+          "ocorridoEm",
+          "origem"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "COLETA"
+            ]
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Instante ISO 8601 com fuso, segundos obrigatórios e até três casas de milissegundos. A resposta usa UTC."
+          },
+          "origem": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          }
+        }
+      },
+      "Entrada": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tipo",
+          "ocorridoEm",
+          "centroId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "ENTRADA"
+            ]
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Instante ISO 8601 com fuso, segundos obrigatórios e até três casas de milissegundos. A resposta usa UTC."
+          },
+          "centroId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        }
+      },
+      "Saida": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tipo",
+          "ocorridoEm",
+          "centroId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "SAIDA"
+            ]
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Instante ISO 8601 com fuso, segundos obrigatórios e até três casas de milissegundos. A resposta usa UTC."
+          },
+          "centroId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        }
+      },
+      "Tentativa": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tipo",
+          "ocorridoEm",
+          "resultado",
+          "motivo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "TENTATIVA"
+            ]
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Instante ISO 8601 com fuso, segundos obrigatórios e até três casas de milissegundos. A resposta usa UTC."
+          },
+          "resultado": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "Entrega": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tipo",
+          "ocorridoEm",
+          "comprovante"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "ENTREGA"
+            ]
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Instante ISO 8601 com fuso, segundos obrigatórios e até três casas de milissegundos. A resposta usa UTC."
+          },
+          "comprovante": {
+            "$ref": "#/components/schemas/Comprovante"
+          }
+        }
+      },
+      "EventoEntrada": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Coleta"
+          },
+          {
+            "$ref": "#/components/schemas/Entrada"
+          },
+          {
+            "$ref": "#/components/schemas/Saida"
+          },
+          {
+            "$ref": "#/components/schemas/Tentativa"
+          },
+          {
+            "$ref": "#/components/schemas/Entrega"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "tipo",
+          "mapping": {
+            "COLETA": "#/components/schemas/Coleta",
+            "ENTRADA": "#/components/schemas/Entrada",
+            "SAIDA": "#/components/schemas/Saida",
+            "TENTATIVA": "#/components/schemas/Tentativa",
+            "ENTREGA": "#/components/schemas/Entrega"
+          }
+        }
+      },
+      "Recibo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tipo",
+          "ocorridoEm",
+          "recebidoEm"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "COLETA",
+              "ENTRADA",
+              "SAIDA",
+              "TENTATIVA",
+              "ENTREGA"
+            ]
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recebidoEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EventoPublico": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tipo",
+          "ocorridoEm"
+        ],
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "COLETA",
+              "ENTRADA",
+              "SAIDA",
+              "TENTATIVA",
+              "ENTREGA"
+            ]
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EventoInterno": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tipo",
+          "ocorridoEm",
+          "recebidoEm",
+          "responsavel",
+          "origem",
+          "centroId",
+          "resultado",
+          "motivo",
+          "comprovanteId",
+          "comprovanteConteudo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "COLETA",
+              "ENTRADA",
+              "SAIDA",
+              "TENTATIVA",
+              "ENTREGA"
+            ]
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recebidoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "responsavel": {
+            "type": "string"
+          },
+          "origem": {
+            "type": "string",
+            "nullable": true
+          },
+          "centroId": {
+            "type": "string",
+            "nullable": true
+          },
+          "resultado": {
+            "type": "string",
+            "nullable": true
+          },
+          "motivo": {
+            "type": "string",
+            "nullable": true
+          },
+          "comprovanteId": {
+            "type": "string",
+            "nullable": true
+          },
+          "comprovanteConteudo": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ContestacaoPublica": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "motivo",
+          "abertaEm",
+          "estado",
+          "decisao",
+          "justificativa",
+          "decididaEm"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "abertaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "Aberta",
+              "Decidida"
+            ]
+          },
+          "decisao": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150,
+            "nullable": true
+          },
+          "justificativa": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "nullable": true
+          },
+          "decididaEm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "Contestacao": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "motivo",
+          "abertaEm",
+          "estado",
+          "decisao",
+          "justificativa",
+          "decididaEm",
+          "encomendaId",
+          "responsavel"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "abertaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "Aberta",
+              "Decidida"
+            ]
+          },
+          "decisao": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150,
+            "nullable": true
+          },
+          "justificativa": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "nullable": true
+          },
+          "decididaEm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "encomendaId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "responsavel": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Rastreamento": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "encomendaId",
+          "status",
+          "eventos",
+          "contestacoes"
+        ],
+        "properties": {
+          "encomendaId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Aguardando coleta",
+              "Coletada",
+              "No centro",
+              "Em trânsito",
+              "Tentativa de entrega",
+              "Entregue"
+            ]
+          },
+          "eventos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventoPublico"
+            }
+          },
+          "contestacoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContestacaoPublica"
+            }
+          }
+        }
+      },
+      "Investigacao": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "encomendaId",
+          "eventos",
+          "contestacoes"
+        ],
+        "properties": {
+          "encomendaId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "eventos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventoInterno"
+            }
+          },
+          "contestacoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Contestacao"
+            }
+          }
+        }
+      },
+      "Abrir": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "motivo"
+        ],
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "Decidir": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decisao",
+          "justificativa"
+        ],
+        "properties": {
+          "decisao": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "justificativa": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "Erro": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "statusCode",
+          "message",
+          "error"
+        ],
+        "properties": {
+          "statusCode": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Eventos",
+      "description": "Coleta, movimentação, tentativas, entrega e consulta interna."
+    },
+    {
+      "name": "Rastreamento",
+      "description": "Acompanhamento resumido do cliente."
+    },
+    {
+      "name": "Contestações",
+      "description": "Abertura e decisão de contestações."
+    }
+  ]
+}

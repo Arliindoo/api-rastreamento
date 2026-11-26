@@ -1,0 +1,18 @@
+:root{font-family:"Inter","Segoe UI",sans-serif;color:#172f3a;background:#f4f7f8;font-size:16px}
+*{box-sizing:border-box}body{margin:0}header{background:#123647;color:#fff}.moldura{max-width:1020px;margin:auto;padding:0 24px}
+.marca{height:60px;display:flex;align-items:center;gap:12px;font-weight:650}.icone{font-size:28px;color:#8ad4c4}
+.docs-link{margin-left:auto;color:#e4f6ef;text-decoration:underline;text-underline-offset:3px;font-size:.85rem}
+h1{font-size:clamp(1.85rem,4vw,2.5rem);letter-spacing:-.045em;margin:40px 0 26px}h2{font-size:1.22rem;margin:0 0 18px;letter-spacing:-.02em}
+.intro{color:#506a74;max-width:680px;line-height:1.6;margin:-12px 0 28px}
+.layout{display:grid;grid-template-columns:255px minmax(0,1fr);gap:20px;align-items:start;margin-bottom:40px}
+aside,section{background:#fff;border:1px solid #d6e0e3;border-radius:12px;padding:24px}section+section{margin-top:16px}
+label{display:block;font-size:.88rem;font-weight:650;margin:14px 0}input,select,textarea,button{font:inherit}
+input,select,textarea{display:block;width:100%;padding:10px 12px;margin-top:6px;border:1px solid #a4b5bc;border-radius:6px;color:#183643;background:white;min-height:42px}textarea{min-height:76px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid #80cbbc;outline-offset:2px}
+button{background:#116453;color:white;border:1px solid #116453;border-radius:6px;font-size:.9rem;font-weight:650;padding:10px 16px;cursor:pointer}
+button:hover{filter:brightness(.94)}.sec{background:#fff;color:#22504c;border-color:#abbfbb}.acoes,.cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cab{justify-content:space-between}.cab h2{margin:0}
+button:disabled{opacity:.52;cursor:not-allowed;filter:none}.orientacao{border-color:#b2d6cb;background:#eaf6f1}.orientacao p{line-height:1.55;margin:0 0 14px}.orientacao #proximosPassos{color:#24564a;font-size:.88rem;font-weight:600;border-top:1px solid #c6e3d6;padding-top:12px}
+.ajuda,small{color:#4e6671;font-size:.87rem;line-height:1.55}.grade{display:grid;grid-template-columns:1fr 1fr;gap:12px}hr{border:0;border-top:1px solid #d9e1e4;margin:20px 0}
+#aviso:not(:empty){padding:14px 16px;border-radius:6px;background:#ddf2e9;color:#184d3d}#aviso.erro:not(:empty){background:#fce8e4;color:#883d31}
+.item{padding:12px 0;border-bottom:1px solid #dde5e6;overflow-wrap:anywhere}.item small{display:block}h3{font-size:1rem;margin:20px 0 6px}.estado{font-weight:700;color:#116453}
+[hidden]{display:none!important}@media(max-width:720px){.moldura{padding:0 16px}.layout,.grade{grid-template-columns:1fr}.grade{gap:0}aside,section{padding:18px}h1{margin-top:26px}}

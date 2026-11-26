@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rastreamento de encomendas</title><link rel="stylesheet" href="/estilo.css"><script defer src="/app.js"></script></head>
+<body>
+<header><div class="moldura marca"><span aria-hidden="true" class="icone">▣</span> Encomendas <a class="docs-link" href="/docs" target="_blank" rel="noopener">Documentação da API ↗</a></div></header>
+<main class="moldura"><h1>Rastreamento de encomendas</h1>
+<p class="intro">Registre o percurso da encomenda, acompanhe a entrega e resolva contestações. Escolha uma conta para ver as ações disponíveis.</p>
+<div class="layout">
+<aside><h2>Quem está usando?</h2>
+<label>Conta de demonstração<select id="conta"><option value="expedicao">Expedição</option><option value="centro">Centro de distribuição</option><option value="motorista">Motorista · ENC-001</option><option value="cliente">Cliente · ENC-001</option><option value="suporte">Suporte</option><option value="cliente2">Outro cliente · ENC-002</option><option value="motorista2">Outro motorista · ENC-002</option></select></label>
+<label>Senha<input id="senha" type="password" autocomplete="off" value="expedicao-09a"></label>
+<p class="ajuda">Senha de teste preenchida ao trocar de conta. Cada conta usa seu nome seguido de <b>-09a</b>.</p>
+<hr><label>Encomenda<select id="encomenda"><option>ENC-001</option><option>ENC-002</option></select></label><p class="ajuda">Cliente e motorista têm acesso apenas à encomenda atribuída.</p></aside>
+<div class="trabalho">
+<section class="orientacao"><h2 id="acaoTitulo"></h2><p id="acaoDescricao"></p><div id="proximosPassos"></div></section>
+<section id="registro" hidden><h2>Registrar evento</h2>
+<form id="evento"><div class="grade"><label>Tipo de evento<select id="tipo"></select></label>
+<label>Quando aconteceu?<input id="hora" type="datetime-local" step="1" required><span class="ajuda">Informe a hora real do fato, mesmo se estiver enviando depois.</span></label></div>
+<label>Identificador do evento<input id="eventoId" required maxlength="64" pattern="[A-Za-z0-9_-]+"><span class="ajuda">Gerado automaticamente. Mantenha o mesmo identificador para reenviar o mesmo evento.</span></label>
+<div id="campos"></div><div class="acoes"><button>Enviar evento</button><button id="novo" class="sec" type="button">Novo evento</button></div>
+<p class="ajuda">Enviar o mesmo registro novamente retorna 200 e mantém um único evento no histórico.</p>
+</form></section>
+<section id="consulta" hidden><div class="cab"><h2 id="tituloConsulta">Histórico</h2><button class="sec" id="buscar">Atualizar histórico</button></div><div id="historico"><p class="ajuda">Consulte a encomenda para carregar o histórico.</p></div></section>
+<section id="abrir" hidden><h2>Contestar uma entrega</h2><p class="ajuda">Se a encomenda aparecer como entregue e você não concordar com a entrega, descreva o que aconteceu.</p><form id="contestar"><label>O que aconteceu?<textarea id="motivoContestacao" maxlength="500" placeholder="Ex.: consta entregue, mas outra pessoa recebeu o pacote" required></textarea></label><button>Enviar contestação</button></form></section>
+<section id="decidir" hidden><h2>Registrar decisão</h2><p class="ajuda">Confira o histórico e o comprovante antes de responder ao cliente. A decisão será exibida no rastreamento.</p><form id="decisaoForm"><label>Contestação aberta<select id="contestacaoId" required></select></label><label>Decisão<input id="decisao" placeholder="Ex.: contestação acolhida" required maxlength="150"></label><label>Justificativa<textarea id="justificativa" maxlength="500" placeholder="Explique os fatos que fundamentam a decisão" required></textarea></label><button>Registrar decisão</button></form></section>
+<p id="aviso" role="status" aria-live="polite"></p>
+</div></div></main></body></html>

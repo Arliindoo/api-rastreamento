@@ -1,0 +1,1916 @@
+{
+  "info": {
+    "name": "09A · Rastreamento de encomendas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Execute na ordem em banco inicial. Contas e vínculos constam no README."
+  },
+  "item": [
+    {
+      "name": "1 · Preparação e autenticação",
+      "item": [
+        {
+          "name": "CT08 | RN8 | HU3 | Sem credencial",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/rastreamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "rastreamento"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(401); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT08 | RN8 | HU3 | Encomenda inicialmente vazia",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/rastreamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "rastreamento"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.status).to.equal(\"Aguardando coleta\");",
+                  "  pm.expect(b.eventos).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 · Rejeições antes da entrega",
+      "item": [
+        {
+          "name": "CT01 | RN1 | HU1 | Encomenda inexistente",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/inexistente/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "inexistente",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "expedicao",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_expedicao}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-coleta\",\n  \"tipo\": \"COLETA\",\n  \"ocorridoEm\": \"2026-11-20T08:00:00-03:00\",\n  \"origem\": \"Expedição central\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(404); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT02 | RN2 | HU1 | Centro inexistente",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "centro",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_centro}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-entrada\",\n  \"tipo\": \"ENTRADA\",\n  \"ocorridoEm\": \"2026-11-20T09:00:00-03:00\",\n  \"centroId\": \"CD-99\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(400); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT03 | RN3 | HU2 | Tentativa sem resultado",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-002/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-002",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "motorista2",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_motorista2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-tentativa\",\n  \"tipo\": \"TENTATIVA\",\n  \"ocorridoEm\": \"2026-11-20T11:00:00-03:00\",\n  \"motivo\": \"Destinatário ausente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(400); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT04 | RN4 | HU2 | Entrega sem comprovante",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "motorista",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_motorista}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-entrega\",\n  \"tipo\": \"ENTREGA\",\n  \"ocorridoEm\": \"2026-11-20T12:00:00-03:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(400); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT05 | RN5 | HU2 | Dia inválido",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "expedicao",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_expedicao}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-coleta\",\n  \"tipo\": \"COLETA\",\n  \"ocorridoEm\": \"2026-02-30T10:00:00Z\",\n  \"origem\": \"Expedição central\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(400); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT09 | RN9 | HU4 | Contestação sem entrega",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/contestacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "contestacoes"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Entrega desconhecida\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(409); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT09 | RN9 | HU4 | Conferir estado inicial preservado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "suporte",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_suporte}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.eventos).to.be.empty;",
+                  "  pm.expect(b.contestacoes).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 · Operação e reconexão",
+      "item": [
+        {
+          "name": "CT01 | RN1 | HU1 | Registrar coleta",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "expedicao",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_expedicao}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-coleta\",\n  \"tipo\": \"COLETA\",\n  \"ocorridoEm\": \"2026-11-20T08:00:00-03:00\",\n  \"origem\": \"Expedição central\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.id).to.equal(\"ev-coleta\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT02 | RN2 | HU1 | Entrada no centro",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "centro",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_centro}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-entrada\",\n  \"tipo\": \"ENTRADA\",\n  \"ocorridoEm\": \"2026-11-20T09:00:00-03:00\",\n  \"centroId\": \"CD-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.tipo).to.equal(\"ENTRADA\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT03 | RN3 | HU2 | Tentativa na segunda encomenda",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-002/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-002",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "motorista2",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_motorista2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-tentativa\",\n  \"tipo\": \"TENTATIVA\",\n  \"ocorridoEm\": \"2026-11-20T11:00:00-03:00\",\n  \"resultado\": \"Não concluída\",\n  \"motivo\": \"Destinatário ausente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.tipo).to.equal(\"TENTATIVA\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT03 | RN3 | HU2 | Tentativa sem baixa de entrega",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-002/rastreamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-002",
+                "rastreamento"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente2",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.status).to.equal(\"Tentativa de entrega\");",
+                  "  pm.expect(b.eventos).to.have.lengthOf(1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT04 | RN4 | HU2 | Entrega com comprovante",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "motorista",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_motorista}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-entrega\",\n  \"tipo\": \"ENTREGA\",\n  \"ocorridoEm\": \"2026-11-20T12:00:00-03:00\",\n  \"comprovante\": {\n    \"id\": \"cp-01\",\n    \"conteudo\": \"Recebido por terceiro na portaria.\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.tipo).to.equal(\"ENTREGA\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT05 | RN5 | HU2 | Saída transmitida depois da entrega",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "centro",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_centro}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-saida\",\n  \"tipo\": \"SAIDA\",\n  \"ocorridoEm\": \"2026-11-20T10:00:00-03:00\",\n  \"centroId\": \"CD-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.ocorridoEm).to.equal(\"2026-11-20T13:00:00.000Z\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT06 | RN6 | HU2 | Reenvio idêntico de evento",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "centro",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_centro}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-saida\",\n  \"tipo\": \"SAIDA\",\n  \"ocorridoEm\": \"2026-11-20T10:00:00-03:00\",\n  \"centroId\": \"CD-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.id).to.equal(\"ev-saida\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT06 | RN6 | HU2 | Mesmo ID com horário divergente",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "centro",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_centro}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-saida\",\n  \"tipo\": \"SAIDA\",\n  \"ocorridoEm\": \"2026-11-20T09:00:00-03:00\",\n  \"centroId\": \"CD-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(409); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT07 | RN7 | HU2 | Mesma prova em nova transmissão",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "motorista",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_motorista}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"envio-prova-2\",\n  \"tipo\": \"ENTREGA\",\n  \"ocorridoEm\": \"2026-11-20T12:00:00-03:00\",\n  \"comprovante\": {\n    \"id\": \"cp-01\",\n    \"conteudo\": \"Recebido por terceiro na portaria.\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.id).to.equal(\"ev-entrega\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT07 | RN7 | HU2 | Prova com conteúdo divergente",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "motorista",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_motorista}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"envio-prova-3\",\n  \"tipo\": \"ENTREGA\",\n  \"ocorridoEm\": \"2026-11-20T12:00:00-03:00\",\n  \"comprovante\": {\n    \"id\": \"cp-01\",\n    \"conteudo\": \"Outro recibo\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(409); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT05 e CT08 | RN5, RN8 | HU3 | Cronologia e privacidade",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/rastreamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "rastreamento"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.status).to.equal(\"Entregue\");",
+                  "  pm.expect(b.eventos.map(e => e.tipo)).to.deep.equal([\"COLETA\",\"ENTRADA\",\"SAIDA\",\"ENTREGA\"]);",
+                  "  b.eventos.forEach(e => pm.expect(e).to.have.all.keys(\"tipo\",\"ocorridoEm\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT07 | RN6, RN7 | HU2 | Conferir original e unicidade",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "suporte",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_suporte}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.eventos).to.have.lengthOf(4);",
+                  "  const provas = b.eventos.filter(e => e.comprovanteId);",
+                  "  pm.expect(provas).to.have.lengthOf(1);",
+                  "  pm.expect(provas[0].comprovanteConteudo).to.equal(\"Recebido por terceiro na portaria.\");",
+                  "  pm.expect(b.eventos[2].ocorridoEm).to.equal(\"2026-11-20T13:00:00.000Z\");",
+                  "  pm.expect(b.eventos[2].recebidoEm >= b.eventos[3].recebidoEm).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 · Autorizações por perfil e recurso",
+      "item": [
+        {
+          "name": "CT08 | RN8 | HU3 | Rastreamento de outro cliente",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/rastreamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "rastreamento"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente2",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(404); pm.expect(b.message).to.be.a(\"string\"); });",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b).not.to.have.property(\"eventos\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT08 | RN8 | HU3 | Cliente sem acesso à evidência privada",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(403); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT09 | RN9 | HU4 | Contestação de encomenda alheia",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/contestacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "contestacoes"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente2",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Teste\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(404); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT01 | RN1 | HU1 | Cliente tenta registrar coleta",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-coleta\",\n  \"tipo\": \"COLETA\",\n  \"ocorridoEm\": \"2026-11-20T08:00:00-03:00\",\n  \"origem\": \"Expedição central\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(403); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT02 | RN2 | HU1 | Operador de outro centro",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "centro",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_centro}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-entrada\",\n  \"tipo\": \"ENTRADA\",\n  \"ocorridoEm\": \"2026-11-20T09:00:00-03:00\",\n  \"centroId\": \"CD-02\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(403); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT04 | RN4 | HU2 | Motorista de outra encomenda",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "motorista2",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_motorista2}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"ev-entrega\",\n  \"tipo\": \"ENTREGA\",\n  \"ocorridoEm\": \"2026-11-20T12:00:00-03:00\",\n  \"comprovante\": {\n    \"id\": \"cp-01\",\n    \"conteudo\": \"Recebido por terceiro na portaria.\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(403); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 · Contestação e comunicação da decisão",
+      "item": [
+        {
+          "name": "CT09 | RN9 | HU4 | Abrir contestação",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/contestacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "contestacoes"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Pacote entregue a outra pessoa.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.estado).to.equal(\"Aberta\");",
+                  "  pm.collectionVariables.set(\"contestacaoId\", b.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT10 | RN10 | HU5 | Cliente tenta decidir",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/contestacoes/{{contestacaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contestacoes",
+                "{{contestacaoId}}"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decisao\": \"Contestação acolhida\",\n  \"justificativa\": \"Entrega a terceiro confirmada. Suporte fará contato.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(403); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT10 | RN10 | HU5 | Revisar evidência e estado preservado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/eventos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "eventos"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "suporte",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_suporte}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.contestacoes).to.have.lengthOf(1);",
+                  "  pm.expect(b.contestacoes[0].estado).to.equal(\"Aberta\");",
+                  "  pm.expect(b.eventos).to.have.lengthOf(4);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT10 | RN10 | HU5 | Registrar decisão do suporte",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/contestacoes/{{contestacaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contestacoes",
+                "{{contestacaoId}}"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "suporte",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_suporte}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decisao\": \"Contestação acolhida\",\n  \"justificativa\": \"Entrega a terceiro confirmada. Suporte fará contato.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.estado).to.equal(\"Decidida\");",
+                  "  pm.expect(b.responsavel).to.equal(\"suporte\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT10 | RN10 | HU5 | Rejeitar segunda decisão",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/contestacoes/{{contestacaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "contestacoes",
+                "{{contestacaoId}}"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "suporte",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_suporte}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decisao\": \"Trocar decisão\",\n  \"justificativa\": \"Entrega a terceiro confirmada. Suporte fará contato.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Erro padronizado\", () => { pm.expect(b.statusCode).to.equal(409); pm.expect(b.message).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CT10 | RN9, RN10 | HU3, HU5 | Cliente recebe a decisão",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/encomendas/ENC-001/rastreamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "encomendas",
+                "ENC-001",
+                "rastreamento"
+              ]
+            },
+            "header": [],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "cliente",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{senha_cliente}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test(\"Resultado e integridade\", () => {",
+                  "  pm.expect(b.contestacoes[0].decisao).to.equal(\"Contestação acolhida\");",
+                  "  pm.expect(b.contestacoes[0].estado).to.equal(\"Decidida\");",
+                  "  pm.expect(b.eventos).to.have.lengthOf(4);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "contestacaoId",
+      "value": ""
+    }
+  ]
+}

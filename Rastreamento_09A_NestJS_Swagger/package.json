@@ -1,0 +1,28 @@
+{
+  "name": "rastreamento-09a",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API NestJS para o caso 09A — Rastreamento de encomendas",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && node dist/main.js",
+    "test": "npm run build && node --test testes/colecao.test.cjs"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "@nestjs/swagger": "^11.4.8",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "newman": "^6.2.3",
+    "typescript": "~5.9.3"
+  }
+}
